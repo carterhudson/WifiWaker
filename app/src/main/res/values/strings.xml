@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Wifi Waker</string>
+    <string name="when">Last occurrence: %s</string>
+    <string name="count">"Re-enabled %d times. "</string>
 </resources>

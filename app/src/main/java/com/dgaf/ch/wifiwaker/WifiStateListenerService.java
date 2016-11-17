@@ -50,15 +50,12 @@ public class WifiStateListenerService extends Service {
     boolean isResetAction = haveAction && action.equals(Constants.ACTION_RESET);
     if (isResetAction) {
       setCount(0);
+      setWhen("");
     }
 
     Timber.d("%s", this);
 
     return START_STICKY;
-  }
-
-  private void setCount(int count) {
-    sharedPreferences.edit().putLong(Constants.KEY_COUNT, count).apply();
   }
 
   @Nullable
@@ -71,17 +68,18 @@ public class WifiStateListenerService extends Service {
     return wifiStateServiceBinder;
   }
 
-  private void initReceiver() {
-    registerReceiver(wifiStateReceiver = new WifiStateBroadcastReceiver(),
-                     new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION));
-  }
-
   @Override
   public void onDestroy() {
     super.onDestroy();
     Timber.d("Wifi listener service terminating...");
     performCleanup();
   }
+
+  private void initReceiver() {
+    registerReceiver(wifiStateReceiver = new WifiStateBroadcastReceiver(),
+                     new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION));
+  }
+
 
   private void performCleanup() {
     unregisterReceiver(wifiStateReceiver);
@@ -91,6 +89,7 @@ public class WifiStateListenerService extends Service {
   }
 
   public class WifiStateServiceBinder extends Binder {
+
     WifiStateListenerService getService() {
       return WifiStateListenerService.this;
     }
@@ -177,10 +176,23 @@ public class WifiStateListenerService extends Service {
     return sharedPreferences.getString(Constants.KEY_WHEN, "");
   }
 
+  private void setCount(int count) {
+    sharedPreferences.edit().putLong(Constants.KEY_COUNT, count).apply();
+  }
+
+  private void setWhen(String when) {
+    sharedPreferences.edit().putString(Constants.KEY_WHEN, when).apply();
+  }
+
   private String getContentText() {
-    return String.format(Locale.getDefault(),
-                         "Re-enabled %d times.  Last occurrence was %s",
-                         getCount(),
-                         getWhen());
+    String whenText = (!(whenText = getWhen()).equals(Constants.EMPTY_STRING)) ?
+                      String.format(Locale.getDefault(), getString(R.string.when), whenText) :
+                      whenText;
+
+    String countText = String.format(Locale.getDefault(), getString(R.string.count), getCount());
+
+    return String.format(Locale.getDefault(), "%s%s",
+                         countText,
+                         whenText);
   }
 }
